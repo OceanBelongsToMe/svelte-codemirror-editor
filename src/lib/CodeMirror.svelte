@@ -31,11 +31,12 @@
     export let editable = true;
     export let readonly = false;
     export let placeholder: string | HTMLElement | null | undefined = undefined;
+    export let baseTheme: ThemeSpec | null | undefined = undefined;
 
     export let nodebounce = false;
 
     const is_browser = typeof window !== "undefined";
-    const dispatch = createEventDispatcher<{ change: string, ready: EditorView, reconfigure: EditorView }>();
+    const dispatch = createEventDispatcher<{ change: string; ready: EditorView; reconfigure: EditorView }>();
 
     let element: HTMLDivElement;
     let view: EditorView;
@@ -46,7 +47,7 @@
     let first_update = true;
 
     $: state_extensions = [
-        ...get_base_extensions(basic, useTab, tabSize, lineWrapping, placeholder, editable, readonly, lang),
+        ...get_base_extensions(basic, useTab, tabSize, lineWrapping, placeholder, editable, readonly, lang, baseTheme),
         ...get_theme(theme, styles),
         ...extensions,
     ];
@@ -58,7 +59,7 @@
 
     onMount(() => {
         view = create_editor_view();
-        dispatch('ready', view);
+        dispatch("ready", view);
     });
     onDestroy(() => view?.destroy());
 
@@ -85,8 +86,8 @@
         view.dispatch({
             effects: StateEffect.reconfigure.of(state_extensions),
         });
-        
-        dispatch('reconfigure', view);
+
+        dispatch("reconfigure", view);
     }
 
     function update(value: string | null | undefined): void {
@@ -132,7 +133,8 @@
         placeholder: string | HTMLElement | null | undefined,
         editable: boolean,
         readonly: boolean,
-        lang: LanguageSupport | null | undefined
+        lang: LanguageSupport | null | undefined,
+        baseTheme: ThemeSpec | null | undefined
     ): Extension[] {
         const extensions: Extension[] = [
             indentUnit.of(" ".repeat(tabSize)),
@@ -145,6 +147,7 @@
         if (placeholder) extensions.push(placeholderExt(placeholder));
         if (lang) extensions.push(lang);
         if (lineWrapping) extensions.push(EditorView.lineWrapping);
+        if (baseTheme) extensions.push(EditorView.baseTheme(baseTheme));
 
         return extensions;
     }
